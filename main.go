@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var Task string
+var task string = "World"
 
 type TaskRequest struct {
 	Task string `json:"task"`
@@ -25,24 +25,28 @@ func postTask(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 	}
 
-	Task = req.Task
+	if req.Task == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"eror": "Task cannot be empty"})
+	}
+
+	task = req.Task
 
 	return c.JSON(http.StatusOK, TaskResponse{
 		Status:  "success",
 		Message: "Task saved successfully",
-		Task:    Task,
+		Task:    task,
 	})
 }
 
 func getTask(c echo.Context) error {
-	return c.JSON(http.StatusOK, "hello, task")
+	return c.JSON(http.StatusOK, map[string]string{"message": "hello, " + task})
 }
 
 func main() {
 	e := echo.New()
 
-	e.GET("/hello,task", getTask)
-	e.POST("/Task", postTask)
+	e.GET("/task", getTask)
+	e.POST("/task", postTask)
 
 	e.Start("localhost:8080")
 }
