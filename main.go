@@ -26,7 +26,7 @@ func postTask(c echo.Context) error {
 	}
 
 	if req.Task == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"eror": "Task cannot be empty"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Task cannot be empty"})
 	}
 
 	task = req.Task
