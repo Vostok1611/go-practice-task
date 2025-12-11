@@ -18,7 +18,7 @@ type TaskRequest struct {
 
 var tasks = []Task{}
 
-func postTask(c echo.Context) error {
+func postTasks(c echo.Context) error {
 	var req TaskRequest
 
 	if err := c.Bind(&req); err != nil {
@@ -39,11 +39,11 @@ func postTask(c echo.Context) error {
 	return c.JSON(http.StatusOK, newTask)
 }
 
-func getTask(c echo.Context) error {
+func getTasks(c echo.Context) error {
 	return c.JSON(http.StatusOK, tasks)
 }
 
-func patсhTask(c echo.Context) error {
+func patсhTasks(c echo.Context) error {
 	id := c.Param("id")
 
 	var req TaskRequest
@@ -65,7 +65,7 @@ func patсhTask(c echo.Context) error {
 	return c.JSON(http.StatusBadRequest, map[string]string{"error": "Task not found"})
 }
 
-func deleteTask(c echo.Context) error {
+func deleteTasks(c echo.Context) error {
 	id := c.Param("id")
 
 	for i, task := range tasks {
@@ -80,10 +80,10 @@ func deleteTask(c echo.Context) error {
 func main() {
 	e := echo.New()
 
-	e.GET("/task", getTask)
-	e.POST("/task", postTask)
-	e.PATCH("/task/:id", patсhTask)
-	e.DELETE("/task/:id", deleteTask)
+	e.GET("/tasks", getTasks)
+	e.POST("/tasks", postTasks)
+	e.PATCH("/tasks/:id", patсhTasks)
+	e.DELETE("/tasks/:id", deleteTasks)
 
 	e.Start("localhost:8080")
 }
