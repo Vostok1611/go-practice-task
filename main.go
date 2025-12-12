@@ -101,13 +101,13 @@ func patсhTasks(c echo.Context) error {
 func deleteTasks(c echo.Context) error {
 	id := c.Param("id")
 
-	var tasks Task
+	var task Task
 
-	if err := db.First().Error; err != nil {
-		return
+	if err := db.First(&task, "id = ?", id).Error; err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Task not found"})
 	}
 
-	if err := db.Delete(&Task{}, id).Error; err != nil {
+	if err := db.Delete(&task).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Could not delete task"})
 	}
 	return c.NoContent(http.StatusNoContent)
