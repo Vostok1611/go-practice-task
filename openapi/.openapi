@@ -1,5 +1,5 @@
 package: api
-generate:
-  strict-server: true
-  echo-server: true
-  models: true
+generate:       # Секция с инструкциями, что именно генерировать
+  strict-server: true   #серверного кода
+  echo-server: true     #Генерация кода для фреймворка Echo.
+  models: true        #Генерация моделей данных

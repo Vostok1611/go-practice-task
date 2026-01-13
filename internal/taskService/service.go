@@ -2,7 +2,6 @@ package taskservice
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -37,8 +36,6 @@ func (s *taskService) CreateTask(task string, is_done string) (Task, error) {
 		Task:   task,
 		IsDone: is_done,
 	}
-
-	fmt.Printf("DEBUG Service: Generated ID: %s\n", newTask.ID)
 
 	err := s.repo.CreateTask(newTask)
 	if err != nil {

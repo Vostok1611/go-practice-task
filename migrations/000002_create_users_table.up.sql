@@ -1,8 +1,8 @@
 -- +migrate Up
-CREATE TABLE tasks (
+CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    task VARCHAR(255) NOT NULL,
-    is_done VARCHAR(50) NOT NULL DEFAULT 'false',
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMP DEFAULT NULL
