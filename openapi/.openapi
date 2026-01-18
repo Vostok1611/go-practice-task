@@ -3,3 +3,4 @@ generate:       # Секция с инструкциями, что именно 
   strict-server: true   #серверного кода
   echo-server: true     #Генерация кода для фреймворка Echo.
   models: true        #Генерация моделей данных
+output: ./internal/web/api.gen.go

@@ -14,8 +14,8 @@ run:
 	go run cmd/main.go
 
 gen:
-	oapi-codegen -config openapi/.openapi -include-tags tasks -package tasks openapi/openapi.yaml > ./internal/web/tasks/api.gen.go
-
+	oapi-codegen -config openapi/.openapi -include-tags tasks,users -package api openapi/openapi.yaml > ./internal/web/api.gen.go
+	
 lint:
 	golangci-lint run --color=auto
 test:

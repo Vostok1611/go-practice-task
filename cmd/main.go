@@ -4,7 +4,8 @@ import (
 	"gomeWork/internal/db"
 	"gomeWork/internal/handlers"
 	taskservice "gomeWork/internal/taskService"
-	"gomeWork/internal/web/tasks"
+	userservice "gomeWork/internal/userService"
+	"gomeWork/internal/web/api"
 	"log"
 
 	"github.com/labstack/echo/v4"
@@ -21,13 +22,26 @@ func main() {
 	newTaskService := taskservice.NewTaskService(newTaskRepo)
 	newTaskHandler := handlers.NewTaskHandler(newTaskService)
 
+	newUserRepo := userservice.NewUserRepository(database)
+	newUserService := userservice.NewUserService(newUserRepo)
+	newUserHandler := handlers.NewUserHandler(newUserService)
+
 	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	strictHandler := tasks.NewStrictHandler(newTaskHandler, nil)
-	tasks.RegisterHandlers(e, strictHandler)
+	combinedHandler := struct {
+		*handlers.TaskHandler
+		*handlers.UserHandler
+	}{
+		TaskHandler: newTaskHandler,
+		UserHandler: newUserHandler,
+	}
+
+	strictHandler := api.NewStrictHandler(combinedHandler, nil)
+
+	api.RegisterHandlers(e, strictHandler)
 
 	if err := e.Start(":8080"); err != nil {
 		log.Fatalf("failed to start wirh err: %v", err)
