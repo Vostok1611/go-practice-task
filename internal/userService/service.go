@@ -2,6 +2,7 @@ package userservice
 
 import (
 	"errors"
+	taskservice "gomeWork/internal/taskService"
 	"strings"
 
 	"github.com/google/uuid"
@@ -13,14 +14,19 @@ type UserService interface {
 	GetUserByID(id string) (User, error)
 	UpdateUser(id string, email string, password string) (User, error)
 	DeleteUser(id string) error
+	GetTasksForUser(userID string) ([]taskservice.Task, error)
 }
 
 type userService struct {
-	repo UserRepository
+	repo        UserRepository
+	taskservice taskservice.TaskService
 }
 
-func NewUserService(r UserRepository) UserService {
-	return &userService{repo: r}
+func NewUserService(r UserRepository, ts taskservice.TaskService) UserService {
+	return &userService{
+		repo:        r,
+		taskservice: ts,
+	}
 }
 
 func (s *userService) CreateUser(email string, password string) (User, error) {
@@ -92,4 +98,16 @@ func (s *userService) UpdateUser(id string, email string, password string) (User
 
 func (s *userService) DeleteUser(id string) error {
 	return s.repo.DeleteUser(id)
+}
+
+// GetTasksForUser implements UserService.
+func (s *userService) GetTasksForUser(userID string) ([]taskservice.Task, error) {
+	if userID == "" {
+		return nil, errors.New("userID is required")
+	}
+	_, err := s.repo.GetUserByID(userID)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+	return s.taskservice.GetTasksByUserID(userID)
 }

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	// УБРАТЬ: "strconv" - больше не нужен!
 
 	taskservice "gomeWork/internal/taskService"
 	"gomeWork/internal/web/api"
@@ -19,10 +18,18 @@ func NewTaskHandler(s taskservice.TaskService) *TaskHandler {
 }
 
 func (h *TaskHandler) GetTasks(ctx context.Context, request api.GetTasksRequestObject) (api.GetTasksResponseObject, error) {
-	allTasks, err := h.service.GetAllTasks()
+	var allTasks []taskservice.Task
+	var err error
+
+	if request.Params.UserId != nil && *request.Params.UserId != "" {
+		allTasks, err = h.service.GetTasksByUserID(*request.Params.UserId)
+	} else {
+		allTasks, err = h.service.GetAllTasks()
+	}
 	if err != nil {
 		return nil, err
 	}
+
 	response := api.GetTasks200JSONResponse{}
 
 	for _, tsk := range allTasks {
@@ -30,6 +37,7 @@ func (h *TaskHandler) GetTasks(ctx context.Context, request api.GetTasksRequestO
 			Id:     &tsk.ID,
 			Task:   &tsk.Task,
 			IsDone: &tsk.IsDone,
+			UserId: &tsk.UserID,
 		}
 		response = append(response, task)
 	}
@@ -37,8 +45,15 @@ func (h *TaskHandler) GetTasks(ctx context.Context, request api.GetTasksRequestO
 }
 
 func (h *TaskHandler) PostTasks(ctx context.Context, request api.PostTasksRequestObject) (api.PostTasksResponseObject, error) {
-	if request.Body == nil || request.Body.Task == "" {
+	if request.Body == nil {
 		return nil, echo.NewHTTPError(400, "Task is required")
+	}
+
+	if request.Body.Task == "" {
+		return nil, echo.NewHTTPError(400, "Task is required")
+	}
+	if request.Body.UserId == "" {
+		return nil, echo.NewHTTPError(400, "User is required")
 	}
 
 	isDone := "false"
@@ -46,27 +61,32 @@ func (h *TaskHandler) PostTasks(ctx context.Context, request api.PostTasksReques
 		isDone = *request.Body.IsDone
 	}
 
-	createdTask, err := h.service.CreateTask(request.Body.Task, isDone)
+	createdTask, err := h.service.CreateTask(request.Body.Task, isDone, request.Body.UserId)
 	if err != nil {
-		return nil, err
+		return nil, echo.NewHTTPError(400, err.Error())
 	}
 
 	return api.PostTasks201JSONResponse{
 		Id:     &createdTask.ID,
 		Task:   &createdTask.Task,
 		IsDone: &createdTask.IsDone,
+		UserId: &createdTask.UserID,
 	}, nil
 }
 
 func (h *TaskHandler) PatchTasksId(ctx context.Context, request api.PatchTasksIdRequestObject) (api.PatchTasksIdResponseObject, error) {
-	// ID теперь string, не нужно конвертировать!
-	idStr := request.Id // ← уже string!
-
-	if request.Body == nil || (request.Body.Task == nil && request.Body.IsDone == nil) {
-		return nil, echo.NewHTTPError(400, "Request body is required")
+	if request.Body == nil || (request.Body.Task == nil && request.Body.IsDone == nil && request.Body.UserId == nil) {
+		return nil, echo.NewHTTPError(400, "At least one field (task, is_done, or user_id) must be provided for update")
 	}
 
-	var taskText, isDone string
+	currentTask, err := h.service.GetTaskByID(request.Id) // ← исправлена переменная
+	if err != nil {
+		return api.PatchTasksId404Response{}, nil
+	}
+
+	taskText := currentTask.Task
+	isDone := currentTask.IsDone
+	userID := currentTask.UserID
 
 	if request.Body.Task != nil {
 		taskText = *request.Body.Task
@@ -76,20 +96,11 @@ func (h *TaskHandler) PatchTasksId(ctx context.Context, request api.PatchTasksId
 		isDone = *request.Body.IsDone
 	}
 
-	currentTask, err := h.service.GetTaskByID(idStr) // ← исправлена переменная
-	if err != nil {
-		return api.PatchTasksId404Response{}, nil
+	if request.Body.UserId != nil {
+		userID = *request.Body.UserId
 	}
 
-	if request.Body.Task == nil {
-		taskText = currentTask.Task
-	}
-
-	if request.Body.IsDone == nil {
-		isDone = currentTask.IsDone
-	}
-
-	updatedTask, err := h.service.UpdateTask(idStr, taskText, isDone) // ← исправлена переменная
+	updatedTask, err := h.service.UpdateTask(request.Id, taskText, isDone, userID) // ← исправлена переменная
 	if err != nil {
 		return nil, echo.NewHTTPError(400, err.Error())
 	}
@@ -98,6 +109,7 @@ func (h *TaskHandler) PatchTasksId(ctx context.Context, request api.PatchTasksId
 		Id:     &updatedTask.ID,
 		Task:   &updatedTask.Task,
 		IsDone: &updatedTask.IsDone,
+		UserId: &updatedTask.UserID,
 	}, nil
 }
 

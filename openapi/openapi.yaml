@@ -8,6 +8,13 @@ paths:
       summary: Get all tasks    #что делает
       tags:                 #метка
         - tasks
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter task by user ID
       responses:                #Что получаем
         '200':
           description: A list of tasks      #Описание
@@ -165,13 +172,17 @@ components:   #Описание всех структурных данных
           type: string
         is_done:
           type: string
+        user_id:
+          type: string
     TaskCreate:
       type: object
-      required: [task]   #[] обозначает массив 
+      required: [task, user_id]   #[] обозначает массив 
       properties:
         task:
           type: string
         is_done:
+          type: string
+        user_id:
           type: string
     TaskUpdate:
       type: object
@@ -179,6 +190,8 @@ components:   #Описание всех структурных данных
         task:
           type: string
         is_done:
+          type: string
+        user_id:
           type: string
     User:
       type: object
@@ -188,6 +201,10 @@ components:   #Описание всех структурных данных
         email:
           type: string
           format: email
+        tasks:                    # ← ДОБАВЛЯЕМ!
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
         created_at:
           type: string
         updated_at:

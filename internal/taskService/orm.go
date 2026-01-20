@@ -6,10 +6,12 @@ type Task struct {
 	ID        string         `gorm:"primaryKey;type:uuid" json:"id"`
 	Task      string         `json:"task"`
 	IsDone    string         `json:"is_done"`
+	UserID    string         `gorm:"type:uuid;index" json:"user_id"` // ← Внешний ключ на User
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 type TaskRequest struct {
 	Task   string `json:"task"`
 	IsDone string `json:"is_done"`
+	UserID string `json:"user_id"` // Теперь обязательное поле
 }

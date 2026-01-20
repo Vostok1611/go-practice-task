@@ -1,5 +1,5 @@
 CREATE TABLE tasks (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     task VARCHAR(255) NOT NULL,
     is_done VARCHAR(50) NOT NULL DEFAULT 'false',
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),

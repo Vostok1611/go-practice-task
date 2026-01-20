@@ -20,10 +20,11 @@ func main() {
 
 	newTaskRepo := taskservice.NewTaskRepository(database)
 	newTaskService := taskservice.NewTaskService(newTaskRepo)
-	newTaskHandler := handlers.NewTaskHandler(newTaskService)
 
 	newUserRepo := userservice.NewUserRepository(database)
-	newUserService := userservice.NewUserService(newUserRepo)
+	newUserService := userservice.NewUserService(newUserRepo, newTaskService)
+
+	newTaskHandler := handlers.NewTaskHandler(newTaskService)
 	newUserHandler := handlers.NewUserHandler(newUserService)
 
 	e := echo.New()

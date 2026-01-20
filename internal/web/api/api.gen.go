@@ -20,18 +20,21 @@ type Task struct {
 	Id     *string `json:"id,omitempty"`
 	IsDone *string `json:"is_done,omitempty"`
 	Task   *string `json:"task,omitempty"`
+	UserId *string `json:"user_id,omitempty"`
 }
 
 // TaskCreate defines model for TaskCreate.
 type TaskCreate struct {
 	IsDone *string `json:"is_done,omitempty"`
 	Task   string  `json:"task"`
+	UserId string  `json:"user_id"`
 }
 
 // TaskUpdate defines model for TaskUpdate.
 type TaskUpdate struct {
 	IsDone *string `json:"is_done,omitempty"`
 	Task   *string `json:"task,omitempty"`
+	UserId *string `json:"user_id,omitempty"`
 }
 
 // User defines model for User.
@@ -39,6 +42,7 @@ type User struct {
 	CreatedAt string              `json:"created_at"`
 	Email     openapi_types.Email `json:"email"`
 	Id        string              `json:"id"`
+	Tasks     *[]Task             `json:"tasks,omitempty"`
 	UpdatedAt string              `json:"updated_at"`
 }
 
@@ -52,6 +56,12 @@ type UserCreate struct {
 type UserUpdate struct {
 	Email    *openapi_types.Email `json:"email,omitempty"`
 	Password *string              `json:"password,omitempty"`
+}
+
+// GetTasksParams defines parameters for GetTasks.
+type GetTasksParams struct {
+	// UserId Filter task by user ID
+	UserId *string `form:"user_id,omitempty" json:"user_id,omitempty"`
 }
 
 // PostTasksJSONRequestBody defines body for PostTasks for application/json ContentType.
@@ -70,7 +80,7 @@ type PatchUsersIdJSONRequestBody = UserUpdate
 type ServerInterface interface {
 	// Get all tasks
 	// (GET /tasks)
-	GetTasks(ctx echo.Context) error
+	GetTasks(ctx echo.Context, params GetTasksParams) error
 	// Create a new task
 	// (POST /tasks)
 	PostTasks(ctx echo.Context) error
@@ -103,8 +113,17 @@ type ServerInterfaceWrapper struct {
 func (w *ServerInterfaceWrapper) GetTasks(ctx echo.Context) error {
 	var err error
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetTasksParams
+	// ------------- Optional query parameter "user_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "user_id", ctx.QueryParams(), &params.UserId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter user_id: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetTasks(ctx)
+	err = w.Handler.GetTasks(ctx, params)
 	return err
 }
 
@@ -239,6 +258,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 }
 
 type GetTasksRequestObject struct {
+	Params GetTasksParams
 }
 
 type GetTasksResponseObject interface {
@@ -445,8 +465,10 @@ type strictHandler struct {
 }
 
 // GetTasks operation middleware
-func (sh *strictHandler) GetTasks(ctx echo.Context) error {
+func (sh *strictHandler) GetTasks(ctx echo.Context, params GetTasksParams) error {
 	var request GetTasksRequestObject
+
+	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.GetTasks(ctx.Request().Context(), request.(GetTasksRequestObject))
