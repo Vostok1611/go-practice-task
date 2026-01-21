@@ -100,3 +100,30 @@ func (h *UserHandler) DeleteUsersId(ctx context.Context, request api.DeleteUsers
 	}
 	return api.DeleteUsersId204Response{}, nil
 }
+
+func (h *UserHandler) GetUsersIdTasks(ctx context.Context, request api.GetUsersIdTasksRequestObject) (api.GetUsersIdTasksResponseObject, error) {
+	// Используем ваш метод GetTasksForUser из userService
+	tasks, err := h.service.GetTasksForUser(request.Id)
+	if err != nil {
+		// Если "user not found" - возвращаем 404
+		if err.Error() == "user not found" {
+			return api.GetUsersIdTasks404Response{}, nil
+		}
+		// Другие ошибки - 400
+		return nil, echo.NewHTTPError(400, err.Error())
+	}
+
+	// Конвертируем задачи в API формат
+	response := api.GetUsersIdTasks200JSONResponse{}
+	for _, tsk := range tasks {
+		task := api.Task{
+			Id:     &tsk.ID,
+			Task:   &tsk.Task,
+			IsDone: &tsk.IsDone,
+			UserId: &tsk.UserID,
+		}
+		response = append(response, task)
+	}
+
+	return response, nil
+}
